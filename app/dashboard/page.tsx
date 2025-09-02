@@ -28,7 +28,7 @@ export default function DashboardPage() {
         <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-8' : 'grid-cols-7'} bg-[#efece7]`}>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="daily-usage">Daily Usage</TabsTrigger>
-          <TabsTrigger value="debt-report">Supplier Debt</TabsTrigger>
+          <TabsTrigger value="debt-report">Pharmacy Debt</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="suppliers">Pharmacies</TabsTrigger>
           <TabsTrigger value="licensing">Licensing</TabsTrigger>

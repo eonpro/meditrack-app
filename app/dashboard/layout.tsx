@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Image from "next/image";
+import LogoutButton from "@/components/dashboard/LogoutButton";
 
 export default async function DashboardLayout({
   children,
@@ -51,6 +52,7 @@ export default async function DashboardLayout({
               <div className="text-sm">
                 Last Sync: <span className="text-blue-400">Just now</span>
               </div>
+              <LogoutButton />
             </div>
           </div>
         </div>
