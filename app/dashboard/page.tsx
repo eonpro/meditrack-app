@@ -10,9 +10,13 @@ import OrdersTab from '@/components/dashboard/OrdersTab';
 import SuppliersTab from '@/components/dashboard/SuppliersTab';
 import LicensingTab from '@/components/dashboard/LicensingTab';
 import ReportsTab from '@/components/dashboard/ReportsTab';
+import UserManagementTab from '@/components/dashboard/UserManagementTab';
+import { useSession } from 'next-auth/react';
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState('inventory');
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   return (
     <div className="space-y-6">
@@ -21,7 +25,7 @@ export default function DashboardPage() {
 
       {/* Tabs Container */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7 bg-[#efece7]">
+        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-8' : 'grid-cols-7'} bg-[#efece7]`}>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="daily-usage">Daily Usage</TabsTrigger>
           <TabsTrigger value="debt-report">Supplier Debt</TabsTrigger>
@@ -29,6 +33,7 @@ export default function DashboardPage() {
           <TabsTrigger value="suppliers">Pharmacies</TabsTrigger>
           <TabsTrigger value="licensing">Licensing</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">Users</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="inventory" className="mt-6">
@@ -58,6 +63,12 @@ export default function DashboardPage() {
         <TabsContent value="reports" className="mt-6">
           <ReportsTab />
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="users" className="mt-6">
+            <UserManagementTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

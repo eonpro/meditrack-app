@@ -33,9 +33,15 @@ export default async function DashboardLayout({
                   id="pharmacySelector" 
                   className="bg-white text-black border-none px-3 py-1 rounded-md text-sm font-semibold cursor-pointer"
                 >
-                  <option value="mycelium">Mycelium Pharmacy</option>
-                  <option value="angel">Angel Pharmacy</option>
-                  <option value="both">Both Pharmacies</option>
+                  {session.user?.pharmacyAccess?.includes('PHARM01') && (
+                    <option value="PHARM01">Mycelium Pharmacy</option>
+                  )}
+                  {session.user?.pharmacyAccess?.includes('PHARM02') && (
+                    <option value="PHARM02">Angel Pharmacy</option>
+                  )}
+                  {session.user?.pharmacyAccess?.length === 2 && (
+                    <option value="both">Both Pharmacies</option>
+                  )}
                 </select>
               </div>
               <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
