@@ -165,9 +165,9 @@ export default function DailyUsageTab() {
       <div className="bg-[#efece7] border-2 border-[#e5e5e5] rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4">Quick Usage Entry</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
           {/* Date Field */}
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
             <div className="relative">
               <input
@@ -181,20 +181,20 @@ export default function DailyUsageTab() {
           </div>
 
           {/* Medication Dropdown */}
-          <div className="relative" ref={medicationDropdownRef}>
+          <div className="relative md:col-span-4" ref={medicationDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">Medication</label>
             <button
               onClick={() => setShowMedicationDropdown(!showMedicationDropdown)}
               className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none bg-white text-left flex justify-between items-center"
             >
-              <span className="truncate">
+              <span className="text-sm pr-2">
                 {selectedMedicationName || 'Select Medication'}
               </span>
               <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
             </button>
             
             {showMedicationDropdown && (
-              <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 w-full min-w-[400px] mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {medications.map((med) => {
                   const totalStock = getTotalStock(med);
                   const stockClass = totalStock === 0 ? 'text-red-600' : 'text-gray-600';
@@ -212,9 +212,9 @@ export default function DailyUsageTab() {
                       }`}
                       disabled={totalStock === 0}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">{med.name}</span>
-                        <span className={`text-sm font-medium ${stockClass}`}>
+                      <div className="flex justify-between items-center gap-4">
+                        <span className="text-sm flex-1">{med.name}</span>
+                        <span className={`text-sm font-medium whitespace-nowrap ${stockClass}`}>
                           (Stock: {totalStock})
                         </span>
                       </div>
@@ -226,8 +226,8 @@ export default function DailyUsageTab() {
           </div>
 
           {/* Quantity Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Used</label>
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Qty</label>
             <input
               type="number"
               min="1"
@@ -239,7 +239,7 @@ export default function DailyUsageTab() {
           </div>
 
           {/* Company Dropdown */}
-          <div className="relative" ref={companyDropdownRef}>
+          <div className="relative md:col-span-3" ref={companyDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
             <button
               onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
@@ -273,7 +273,7 @@ export default function DailyUsageTab() {
           <button
             onClick={handleRecordUsage}
             disabled={loading || !selectedMedication || !quantity}
-            className="px-6 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="md:col-span-2 px-6 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {loading ? 'Recording...' : 'Record Usage'}
           </button>
