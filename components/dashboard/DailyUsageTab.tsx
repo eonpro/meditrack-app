@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Calendar } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { usePharmacy } from '@/contexts/PharmacyContext';
 
 interface Medication {
   id: string;
@@ -28,6 +29,7 @@ interface UsageRecord {
 }
 
 export default function DailyUsageTab() {
+  const { selectedPharmacy } = usePharmacy();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [usageRecords, setUsageRecords] = useState<UsageRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -37,7 +39,7 @@ export default function DailyUsageTab() {
   const [selectedCompany, setSelectedCompany] = useState('EONMeds');
   const [showMedicationDropdown, setShowMedicationDropdown] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
-  const [selectedPharmacy, setSelectedPharmacy] = useState('');
+  const [recordPharmacy, setRecordPharmacy] = useState('');
   const [loading, setLoading] = useState(false);
   
   const medicationDropdownRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ export default function DailyUsageTab() {
   useEffect(() => {
     fetchMedications();
     fetchUsageRecords();
-  }, []);
+  }, [selectedPharmacy]); // Re-fetch when selected pharmacy changes
 
   // Click outside handlers
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function DailyUsageTab() {
 
   const fetchMedications = async () => {
     try {
-      const response = await fetch('/api/medications');
+      const response = await fetch(`/api/medications?pharmacy=${selectedPharmacy}`);
       if (response.ok) {
         const data = await response.json();
         setMedications(data);
@@ -94,7 +96,7 @@ export default function DailyUsageTab() {
 
   const fetchUsageRecords = async () => {
     try {
-      const response = await fetch('/api/usage-records');
+      const response = await fetch(`/api/usage-records?pharmacy=${selectedPharmacy}`);
       if (response.ok) {
         const data = await response.json();
         setUsageRecords(data);
@@ -115,8 +117,26 @@ export default function DailyUsageTab() {
       const medication = medications.find(m => m.id === selectedMedication);
       if (!medication) return;
 
-      // Determine which pharmacy has stock
-      const pharmacy = medication.myceliumStock > 0 ? 'Mycelium Pharmacy' : 'Angel Pharmacy';
+      // Determine which pharmacy to use based on selection
+      let pharmacy = '';
+      if (selectedPharmacy === 'PHARM01') {
+        pharmacy = 'Mycelium Pharmacy';
+      } else if (selectedPharmacy === 'PHARM02') {
+        pharmacy = 'Angel Pharmacy';
+      } else {
+        // If "both" is selected, determine based on stock
+        pharmacy = medication.myceliumStock > 0 ? 'Mycelium Pharmacy' : 'Angel Pharmacy';
+      }
+      
+      // Check if the selected pharmacy has stock
+      const hasStock = (pharmacy === 'Mycelium Pharmacy' && medication.myceliumStock >= parseInt(quantity)) ||
+                       (pharmacy === 'Angel Pharmacy' && medication.angelStock >= parseInt(quantity));
+      
+      if (!hasStock) {
+        alert(`Insufficient stock in ${pharmacy}`);
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch('/api/usage-records', {
         method: 'POST',

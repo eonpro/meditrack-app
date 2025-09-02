@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, TrendingUp, AlertTriangle, DollarSign, Package, RefreshCw, Calculator } from 'lucide-react';
+import { usePharmacy } from '@/contexts/PharmacyContext';
 
 interface PharmacyBalance {
   pharmacy: string;
@@ -12,6 +13,7 @@ interface PharmacyBalance {
 }
 
 export default function ReportsTab() {
+  const { selectedPharmacy } = usePharmacy();
   const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -66,7 +68,7 @@ export default function ReportsTab() {
   const calculatePharmacyBalances = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/usage-records');
+      const response = await fetch(`/api/usage-records?pharmacy=${selectedPharmacy}`);
       const records = await response.json();
       
       // Filter by date range
@@ -116,7 +118,7 @@ export default function ReportsTab() {
 
   useEffect(() => {
     calculatePharmacyBalances();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedPharmacy]); // Re-calculate when selected pharmacy changes
 
   return (
     <div className="space-y-6">

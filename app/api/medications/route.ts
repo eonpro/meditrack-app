@@ -2,24 +2,40 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get the selected pharmacy from query params
+    const { searchParams } = new URL(request.url);
+    const selectedPharmacy = searchParams.get('pharmacy') || 'both';
+    
     // Get user's pharmacy access
     const userPharmacyAccess = session.user?.pharmacyAccess || [];
-    const hasMyceliumAccess = userPharmacyAccess.includes('PHARM01');
-    const hasAngelAccess = userPharmacyAccess.includes('PHARM02');
+    
+    // Determine which pharmacies to show based on selection
+    let pharmaciesToShow: string[] = [];
+    if (selectedPharmacy === 'both') {
+      pharmaciesToShow = userPharmacyAccess;
+    } else if (userPharmacyAccess.includes(selectedPharmacy)) {
+      pharmaciesToShow = [selectedPharmacy];
+    } else {
+      // User doesn't have access to the selected pharmacy
+      return NextResponse.json({ error: 'Access denied to selected pharmacy' }, { status: 403 });
+    }
+    
+    const hasMyceliumAccess = pharmaciesToShow.includes('PHARM01');
+    const hasAngelAccess = pharmaciesToShow.includes('PHARM02');
 
     const medications = await prisma.medication.findMany({
       include: {
         inventory: {
           where: {
             pharmacyId: {
-              in: userPharmacyAccess, // Only include inventory for accessible pharmacies
+              in: pharmaciesToShow, // Only include inventory for selected pharmacies
             },
           },
           include: {

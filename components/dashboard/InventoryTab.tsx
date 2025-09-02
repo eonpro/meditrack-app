@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Edit2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { usePharmacy } from '@/contexts/PharmacyContext';
 
 interface Medication {
   id: string;
@@ -18,6 +19,7 @@ interface Medication {
 
 export default function InventoryTab() {
   const { data: session } = useSession();
+  const { selectedPharmacy } = usePharmacy();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -25,7 +27,7 @@ export default function InventoryTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState('');
-  const [selectedPharmacy, setSelectedPharmacy] = useState('Mycelium Pharmacy');
+  const [selectedPharmacyForAdd, setSelectedPharmacyForAdd] = useState('Mycelium Pharmacy');
   const [quantity, setQuantity] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingMed, setEditingMed] = useState<Medication | null>(null);
@@ -36,11 +38,11 @@ export default function InventoryTab() {
 
   useEffect(() => {
     fetchMedications();
-  }, []);
+  }, [selectedPharmacy]); // Re-fetch when selected pharmacy changes
 
   const fetchMedications = async () => {
     try {
-      const response = await fetch('/api/medications');
+      const response = await fetch(`/api/medications?pharmacy=${selectedPharmacy}`);
       if (response.ok) {
         const data = await response.json();
         setMedications(data);
@@ -153,7 +155,7 @@ export default function InventoryTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           medicationId: selectedMedication,
-          pharmacyName: selectedPharmacy,
+          pharmacyName: selectedPharmacyForAdd,
           quantity: parseInt(quantity),
         }),
       });
@@ -399,8 +401,8 @@ export default function InventoryTab() {
                 </label>
                 <select
                   className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                  value={selectedPharmacy}
-                  onChange={(e) => setSelectedPharmacy(e.target.value)}
+                  value={selectedPharmacyForAdd}
+                  onChange={(e) => setSelectedPharmacyForAdd(e.target.value)}
                 >
                   <option value="Mycelium Pharmacy">Mycelium Pharmacy</option>
                   <option value="Angel Pharmacy">Angel Pharmacy</option>

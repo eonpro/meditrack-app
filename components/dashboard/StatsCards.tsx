@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePharmacy } from '@/contexts/PharmacyContext';
 
 interface Stats {
   totalMedications: number;
@@ -11,6 +12,7 @@ interface Stats {
 }
 
 export default function StatsCards() {
+  const { selectedPharmacy } = usePharmacy();
   const [stats, setStats] = useState<Stats>({
     totalMedications: 0,
     lowStockItems: 0,
@@ -21,11 +23,11 @@ export default function StatsCards() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [selectedPharmacy]); // Re-fetch when selected pharmacy changes
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/stats');
+      const response = await fetch(`/api/stats?pharmacy=${selectedPharmacy}`);
       if (response.ok) {
         const data = await response.json();
         setStats(data);
