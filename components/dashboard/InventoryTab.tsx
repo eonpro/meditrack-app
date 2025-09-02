@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 
 interface Medication {
   id: string;
@@ -20,6 +20,11 @@ export default function InventoryTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState('');
+  const [selectedPharmacy, setSelectedPharmacy] = useState('Mycelium Pharmacy');
+  const [quantity, setQuantity] = useState('');
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     fetchMedications();
@@ -27,7 +32,14 @@ export default function InventoryTab() {
 
   const fetchMedications = async () => {
     try {
-      // TODO: Replace with actual API call
+      const response = await fetch('/api/medications');
+      if (response.ok) {
+        const data = await response.json();
+        setMedications(data);
+      }
+    } catch (error) {
+      console.error('Error fetching medications:', error);
+      // Use placeholder data if API fails
       setMedications([
         {
           id: '1',
@@ -63,10 +75,36 @@ export default function InventoryTab() {
           primaryPharmacy: 'Angel Pharmacy',
         },
       ]);
-    } catch (error) {
-      console.error('Error fetching medications:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddStock = async () => {
+    if (!selectedMedication || !quantity) return;
+    
+    setAdding(true);
+    try {
+      const response = await fetch('/api/medications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medicationId: selectedMedication,
+          pharmacyName: selectedPharmacy,
+          quantity: parseInt(quantity),
+        }),
+      });
+
+      if (response.ok) {
+        await fetchMedications();
+        setShowAddModal(false);
+        setSelectedMedication('');
+        setQuantity('');
+      }
+    } catch (error) {
+      console.error('Error adding stock:', error);
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -110,17 +148,20 @@ export default function InventoryTab() {
           <option value="GLP-1 Agonist">GLP-1 Agonist (Semaglutide)</option>
           <option value="GLP-1/GIP Agonist">GLP-1/GIP Agonist (Tirzepatide)</option>
         </select>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] flex items-center gap-2"
+        >
           <Plus className="w-5 h-5" />
           Add Stock
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border-2 border-[#e5e5e5] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b-2 border-gray-200">
+            <thead className="bg-[#efece7] border-b-2 border-[#e5e5e5]">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   ID
@@ -145,6 +186,9 @@ export default function InventoryTab() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Unit Cost
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Primary Pharmacy
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Status
@@ -186,13 +230,16 @@ export default function InventoryTab() {
                       <span className="text-gray-900">${med.unitCost.toFixed(2)}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-gray-600">{med.primaryPharmacy}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.className}`}>
                         {status.label}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {totalStock <= med.reorderLevel && (
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <button className="text-[#0e88e9] hover:text-[#0c70c0] text-sm font-medium">
                           Reorder
                         </button>
                       )}
@@ -204,6 +251,86 @@ export default function InventoryTab() {
           </table>
         </div>
       </div>
+
+      {/* Add Stock Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Add Medication Stock</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Medication
+                </label>
+                <select
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={selectedMedication}
+                  onChange={(e) => setSelectedMedication(e.target.value)}
+                >
+                  <option value="">Select Medication</option>
+                  {medications.map((med) => (
+                    <option key={med.id} value={med.id}>
+                      {med.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pharmacy Location
+                </label>
+                <select
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={selectedPharmacy}
+                  onChange={(e) => setSelectedPharmacy(e.target.value)}
+                >
+                  <option value="Mycelium Pharmacy">Mycelium Pharmacy</option>
+                  <option value="Angel Pharmacy">Angel Pharmacy</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity to Add
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  placeholder="0"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddStock}
+                  disabled={!selectedMedication || !quantity || adding}
+                  className="flex-1 px-4 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {adding ? 'Adding...' : 'Add Stock'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

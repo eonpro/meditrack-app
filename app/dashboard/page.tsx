@@ -26,7 +26,7 @@ export default function DashboardPage() {
           <TabsTrigger value="daily-usage">Daily Usage</TabsTrigger>
           <TabsTrigger value="debt-report">Supplier Debt</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+          <TabsTrigger value="suppliers">Pharmacies</TabsTrigger>
           <TabsTrigger value="licensing">Licensing</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>

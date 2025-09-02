@@ -16,7 +16,7 @@ export default function LicensingTab() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
+      <div className="bg-[#efece7] border-2 border-[#e5e5e5] rounded-xl p-6">
         <h3 className="text-xl font-bold mb-4">Mycelium Pharmacy</h3>
         <p className="text-gray-600 mb-4">Licensed in {myceliumLicenses.length} states:</p>
         <div className="grid grid-cols-2 gap-2">
@@ -28,7 +28,7 @@ export default function LicensingTab() {
         </div>
       </div>
 
-      <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
+      <div className="bg-[#efece7] border-2 border-[#e5e5e5] rounded-xl p-6">
         <h3 className="text-xl font-bold mb-4">Angel Pharmacy</h3>
         <p className="text-gray-600 mb-4">Licensed in {angelLicenses.length} states:</p>
         <div className="grid grid-cols-2 gap-2">
