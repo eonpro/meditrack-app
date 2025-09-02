@@ -39,7 +39,7 @@ export default function DailyUsageTab() {
   const [selectedCompany, setSelectedCompany] = useState('EONMeds');
   const [showMedicationDropdown, setShowMedicationDropdown] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
-  const [recordPharmacy, setRecordPharmacy] = useState('');
+  const [usagePharmacy, setUsagePharmacy] = useState(''); // Which pharmacy to deduct from
   const [loading, setLoading] = useState(false);
   
   const medicationDropdownRef = useRef<HTMLDivElement>(null);
@@ -54,6 +54,14 @@ export default function DailyUsageTab() {
   useEffect(() => {
     fetchMedications();
     fetchUsageRecords();
+    // Set default usage pharmacy based on selected view
+    if (selectedPharmacy === 'PHARM01') {
+      setUsagePharmacy('Mycelium Pharmacy');
+    } else if (selectedPharmacy === 'PHARM02') {
+      setUsagePharmacy('Angel Pharmacy');
+    } else {
+      setUsagePharmacy(''); // User must select when viewing both
+    }
   }, [selectedPharmacy]); // Re-fetch when selected pharmacy changes
 
   // Click outside handlers
@@ -112,21 +120,19 @@ export default function DailyUsageTab() {
       return;
     }
 
+    // If viewing both pharmacies, user must select which pharmacy to use
+    if (selectedPharmacy === 'both' && !usagePharmacy) {
+      alert('Please select which pharmacy to use');
+      return;
+    }
+
     setLoading(true);
     try {
       const medication = medications.find(m => m.id === selectedMedication);
       if (!medication) return;
 
-      // Determine which pharmacy to use based on selection
-      let pharmacy = '';
-      if (selectedPharmacy === 'PHARM01') {
-        pharmacy = 'Mycelium Pharmacy';
-      } else if (selectedPharmacy === 'PHARM02') {
-        pharmacy = 'Angel Pharmacy';
-      } else {
-        // If "both" is selected, determine based on stock
-        pharmacy = medication.myceliumStock > 0 ? 'Mycelium Pharmacy' : 'Angel Pharmacy';
-      }
+      // Use the selected pharmacy
+      const pharmacy = usagePharmacy;
       
       // Check if the selected pharmacy has stock
       const hasStock = (pharmacy === 'Mycelium Pharmacy' && medication.myceliumStock >= parseInt(quantity)) ||
@@ -155,6 +161,10 @@ export default function DailyUsageTab() {
         setQuantity('');
         setSelectedMedication('');
         setSelectedMedicationName('');
+        // Only reset pharmacy selection if viewing both
+        if (selectedPharmacy === 'both') {
+          setUsagePharmacy('');
+        }
         
         // Refresh data
         await fetchMedications();
@@ -232,7 +242,10 @@ export default function DailyUsageTab() {
                       <div className="flex justify-between items-center gap-4">
                         <span className="text-sm flex-1">{med.name}</span>
                         <span className={`text-sm font-medium whitespace-nowrap ${stockClass}`}>
-                          (Stock: {totalStock})
+                          {selectedPharmacy === 'both' 
+                            ? `(M: ${med.myceliumStock} | A: ${med.angelStock})`
+                            : `(Stock: ${totalStock})`
+                          }
                         </span>
                       </div>
                     </button>
@@ -285,6 +298,23 @@ export default function DailyUsageTab() {
               </div>
             )}
           </div>
+
+          {/* Pharmacy Selector (only when viewing both) */}
+          {selectedPharmacy === 'both' && (
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Use From</label>
+              <select
+                value={usagePharmacy}
+                onChange={(e) => setUsagePharmacy(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                required
+              >
+                <option value="">Select Pharmacy</option>
+                <option value="Mycelium Pharmacy">Mycelium Pharmacy</option>
+                <option value="Angel Pharmacy">Angel Pharmacy</option>
+              </select>
+            </div>
+          )}
 
           {/* Record Usage Button */}
           <button
