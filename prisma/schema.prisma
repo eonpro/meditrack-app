@@ -115,8 +115,8 @@ model Inventory {
   updatedAt       DateTime  @updatedAt
   
   // Relations
-  medication      Medication @relation(fields: [medicationId], references: [id], onDelete: CASCADE)
-  pharmacy        Pharmacy   @relation(fields: [pharmacyId], references: [id], onDelete: CASCADE)
+  medication      Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  pharmacy        Pharmacy   @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
   
   @@unique([medicationId, pharmacyId])
   @@index([medicationId])
@@ -227,7 +227,7 @@ model OrderItem {
   totalCost       Float
   
   // Relations
-  order           Order      @relation(fields: [orderId], references: [id], onDelete: CASCADE)
+  order           Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   medication      Medication @relation(fields: [medicationId], references: [id])
   
   @@index([orderId])
