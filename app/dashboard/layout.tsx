@@ -23,7 +23,7 @@ export default async function DashboardLayout({
               <img 
                 src="https://static.wixstatic.com/media/c49a9b_ea9e6b716ac844ddbe9bce2485ba6198~mv2.png" 
                 alt="Logo" 
-                className="h-14 w-auto brightness-0 invert"
+                className="h-14 w-auto"
               />
             </div>
             <div className="flex items-center gap-6">

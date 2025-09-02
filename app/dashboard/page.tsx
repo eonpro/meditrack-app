@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
       {/* Tabs Container */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7 bg-gray-100">
+        <TabsList className="grid w-full grid-cols-7 bg-[#efece7]">
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="daily-usage">Daily Usage</TabsTrigger>
           <TabsTrigger value="debt-report">Supplier Debt</TabsTrigger>

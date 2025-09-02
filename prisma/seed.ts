@@ -166,9 +166,9 @@ async function main() {
     });
 
     // Create inventory records for both pharmacies
-    // Semaglutide primarily stocked at Mycelium, Tirzepatide at Angel
-    const myceliumStock = med.primaryPharmacy === 'PHARM01' ? 50 : 0;
-    const angelStock = med.primaryPharmacy === 'PHARM02' ? 50 : 0;
+    // All medications start with 0 stock
+    const myceliumStock = 0;
+    const angelStock = 0;
 
     await prisma.inventory.upsert({
       where: {
