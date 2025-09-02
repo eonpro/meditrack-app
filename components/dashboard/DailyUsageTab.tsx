@@ -22,6 +22,7 @@ interface UsageRecord {
   company: string;
   unitCost: number;
   totalCost: number;
+  fulfillmentFee?: number;
   pharmacy: string;
 }
 
@@ -43,13 +44,8 @@ export default function DailyUsageTab() {
 
   const companies = [
     'EONMeds',
-    'Eon Health',
-    'WellCare',
-    'HealthFirst',
-    'MedPlus',
-    'CarePlus',
-    'Wellness Co',
-    'Prime Health',
+    'Mycelium',
+    'Angel',
   ];
 
   useEffect(() => {
@@ -308,6 +304,9 @@ export default function DailyUsageTab() {
                   Total Cost
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Fulfillment Fee
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Pharmacy
                 </th>
               </tr>
@@ -315,7 +314,7 @@ export default function DailyUsageTab() {
             <tbody className="divide-y divide-gray-200">
               {usageRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
                     No usage records yet. Record your first medication usage above.
                   </td>
                 </tr>
@@ -342,6 +341,15 @@ export default function DailyUsageTab() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                       ${record.totalCost.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {record.company === 'EONMeds' ? (
+                        <span className="text-green-600 font-semibold">
+                          +${(record.fulfillmentFee || 0).toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {record.pharmacy}

@@ -32,8 +32,9 @@ export async function GET() {
       medication: record.medication.name,
       quantity: record.quantity,
       company: record.company,
-      unitCost: record.medication.unitCost,
-      totalCost: record.quantity * record.medication.unitCost,
+      unitCost: record.unitCost,
+      totalCost: record.totalCost,
+      fulfillmentFee: record.fulfillmentFee || 0,
       pharmacy: record.pharmacy.name,
     }));
 
@@ -91,6 +92,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Insufficient stock' }, { status: 400 });
     }
 
+    // Calculate fulfillment fee ($15 per item if EONMeds)
+    const fulfillmentFee = company === 'EONMeds' ? quantity * 15 : 0;
+
     // Create usage record and update inventory in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create usage record
@@ -104,6 +108,7 @@ export async function POST(request: Request) {
           userId: session.user.id,
           unitCost: medication.unitCost,
           totalCost: quantity * medication.unitCost,
+          fulfillmentFee,
         },
       });
 

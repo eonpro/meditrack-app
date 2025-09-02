@@ -130,9 +130,10 @@ model UsageRecord {
   medicationId    String
   pharmacyId      String
   quantity        Int
-  company         String    // e.g., "EONMeds", "Mycelium Pharmacy", "Angel Pharmacy"
-  unitCost        Float     // Cost at time of usage (0 for EONMeds)
+  company         String    // e.g., "EONMeds", "Mycelium", "Angel"
+  unitCost        Float     // Cost at time of usage
   totalCost       Float     // quantity * unitCost
+  fulfillmentFee  Float     @default(0) // $15 per item when company is EONMeds
   userId          String    // Who recorded this usage
   notes           String?
   createdAt       DateTime  @default(now())
