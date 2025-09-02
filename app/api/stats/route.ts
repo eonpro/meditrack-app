@@ -28,13 +28,13 @@ export async function GET() {
       where: { status: 'PENDING' },
     });
 
-    // Get today's usage
+    // Get today's usage (sum of quantities, not just count)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const todayUsage = await prisma.usageRecord.count({
+    const todayUsageRecords = await prisma.usageRecord.findMany({
       where: {
         date: {
           gte: today,
@@ -42,6 +42,8 @@ export async function GET() {
         },
       },
     });
+    
+    const todayUsage = todayUsageRecords.reduce((sum, record) => sum + record.quantity, 0);
 
     // Get total debt
     const debtRecords = await prisma.debtRecord.findMany();
