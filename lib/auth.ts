@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { Role } from "@prisma/client";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -77,7 +78,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as Role;
         session.user.pharmacyAccess = token.pharmacyAccess as string[];
       }
       return session;
