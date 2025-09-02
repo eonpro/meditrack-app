@@ -14,7 +14,6 @@ interface Medication {
   angelStock: number;
   reorderLevel: number;
   unitCost: number;
-  primaryPharmacy: string;
 }
 
 export default function InventoryTab() {
@@ -60,7 +59,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 30.0,
-          primaryPharmacy: 'Mycelium Pharmacy',
+
         },
         {
           id: '2',
@@ -71,7 +70,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 40.0,
-          primaryPharmacy: 'Mycelium Pharmacy',
+
         },
         {
           id: '3',
@@ -82,7 +81,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 70.0,
-          primaryPharmacy: 'Mycelium Pharmacy',
+
         },
         {
           id: '4',
@@ -93,7 +92,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 90.0,
-          primaryPharmacy: 'Mycelium Pharmacy',
+
         },
         {
           id: '5',
@@ -104,7 +103,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 60.0,
-          primaryPharmacy: 'Angel Pharmacy',
+
         },
         {
           id: '6',
@@ -115,7 +114,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 80.0,
-          primaryPharmacy: 'Angel Pharmacy',
+
         },
         {
           id: '7',
@@ -126,7 +125,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 90.0,
-          primaryPharmacy: 'Angel Pharmacy',
+
         },
         {
           id: '8',
@@ -137,7 +136,7 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 130.0,
-          primaryPharmacy: 'Angel Pharmacy',
+
         },
       ]);
     } finally {
@@ -287,9 +286,6 @@ export default function InventoryTab() {
                   Unit Cost
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Pharmacy
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -327,9 +323,6 @@ export default function InventoryTab() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-gray-900">${med.unitCost.toFixed(2)}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-gray-600">{med.primaryPharmacy}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.className}`}>

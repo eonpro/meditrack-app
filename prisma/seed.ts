@@ -98,7 +98,7 @@ async function main() {
       category: 'GLP-1 Agonist',
       unitCost: 30.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM01', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'SEM5',
@@ -106,7 +106,7 @@ async function main() {
       category: 'GLP-1 Agonist',
       unitCost: 40.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM01', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'SEM10',
@@ -114,7 +114,7 @@ async function main() {
       category: 'GLP-1 Agonist',
       unitCost: 70.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM02', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'SEM125',
@@ -122,7 +122,7 @@ async function main() {
       category: 'GLP-1 Agonist',
       unitCost: 90.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM02', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'TIRZ10',
@@ -130,7 +130,7 @@ async function main() {
       category: 'GLP-1/GIP Agonist',
       unitCost: 60.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM01', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'TIRZ20',
@@ -138,7 +138,7 @@ async function main() {
       category: 'GLP-1/GIP Agonist',
       unitCost: 80.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM01', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'TIRZ30',
@@ -146,7 +146,7 @@ async function main() {
       category: 'GLP-1/GIP Agonist',
       unitCost: 90.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM02', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
     {
       code: 'TIRZ60',
@@ -154,7 +154,7 @@ async function main() {
       category: 'GLP-1/GIP Agonist',
       unitCost: 130.0,
       reorderLevel: 15,
-      primaryPharmacy: 'PHARM02', // Both pharmacies stock this
+      primaryPharmacy: null, // Both pharmacies stock all medications
     },
   ];
 

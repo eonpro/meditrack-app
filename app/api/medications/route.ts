@@ -60,7 +60,6 @@ export async function GET(request: Request) {
         angelStock: hasAngelAccess ? (angelInv?.currentStock || 0) : 0,
         reorderLevel: med.reorderLevel,
         unitCost: med.unitCost,
-        primaryPharmacy: med.primaryPharmacy === 'PHARM01' ? 'Mycelium Pharmacy' : 'Angel Pharmacy',
       };
     });
 
