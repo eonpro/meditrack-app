@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User roles enum
+enum Role {
+  ADMIN
+  PHARMACY_MANAGER
+  STAFF
+  VIEWER
+}
+
+// Order status enum
+enum OrderStatus {
+  PENDING
+  APPROVED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// Payment method enum
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  CREDIT
+}
+
+// User model for authentication and authorization
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  name            String?
+  role            Role      @default(VIEWER)
+  pharmacyAccess  String[]  // Array of pharmacy IDs user can access
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLogin       DateTime?
+  isActive        Boolean   @default(true)
+  
+  // Relations
+  usageRecords    UsageRecord[]
+  orders          Order[]
+  auditLogs       AuditLog[]
+  payments        Payment[]
+  
+  @@index([email])
+  @@index([role])
+}
+
+// Pharmacy model
+model Pharmacy {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  contact         String?
+  email           String?
+  phone           String?
+  address         String?
+  licenses        String[]  // Array of state licenses
+  paymentTerms    String    @default("Net 7")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  inventory       Inventory[]
+  usageRecords    UsageRecord[]
+  debtRecords     DebtRecord[]
+  orders          Order[]
+  payments        Payment[]
+  
+  @@index([name])
+}
+
+// Medication model
+model Medication {
+  id              String    @id @default(cuid())
+  code            String    @unique // e.g., "SEM25", "TIRZ60"
+  name            String
+  category        String    // e.g., "GLP-1 Agonist", "GLP-1/GIP Agonist"
+  unitCost        Float
+  reorderLevel    Int       @default(15)
+  primaryPharmacy String?   // Default pharmacy for this medication
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  inventory       Inventory[]
+  usageRecords    UsageRecord[]
+  orderItems      OrderItem[]
+  
+  @@index([code])
+  @@index([category])
+}
+
+// Inventory model - links medications to pharmacies with stock levels
+model Inventory {
+  id              String    @id @default(cuid())
+  medicationId    String
+  pharmacyId      String
+  currentStock    Int       @default(0)
+  lastRestocked   DateTime?
+  expiryDate      DateTime?
+  batchNumber     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  medication      Medication @relation(fields: [medicationId], references: [id], onDelete: CASCADE)
+  pharmacy        Pharmacy   @relation(fields: [pharmacyId], references: [id], onDelete: CASCADE)
+  
+  @@unique([medicationId, pharmacyId])
+  @@index([medicationId])
+  @@index([pharmacyId])
+}
+
+// Usage record model for tracking daily usage
+model UsageRecord {
+  id              String    @id @default(cuid())
+  date            DateTime
+  medicationId    String
+  pharmacyId      String
+  quantity        Int
+  company         String    // e.g., "EONMeds", "Mycelium Pharmacy", "Angel Pharmacy"
+  unitCost        Float     // Cost at time of usage (0 for EONMeds)
+  totalCost       Float     // quantity * unitCost
+  userId          String    // Who recorded this usage
+  notes           String?
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  medication      Medication @relation(fields: [medicationId], references: [id])
+  pharmacy        Pharmacy   @relation(fields: [pharmacyId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
+  
+  @@index([date])
+  @@index([medicationId])
+  @@index([pharmacyId])
+  @@index([company])
+}
+
+// Debt record model for supplier debts
+model DebtRecord {
+  id              String    @id @default(cuid())
+  invoiceNumber   String    @unique
+  date            DateTime
+  pharmacyId      String
+  itemCount       Int
+  amount          Float
+  paidAmount      Float     @default(0)
+  balance         Float
+  dueDate         DateTime?
+  status          String    @default("UNPAID") // UNPAID, PARTIAL, PAID
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  pharmacy        Pharmacy   @relation(fields: [pharmacyId], references: [id])
+  payments        Payment[]
+  
+  @@index([invoiceNumber])
+  @@index([pharmacyId])
+  @@index([status])
+}
+
+// Payment model for tracking payments against debts
+model Payment {
+  id              String        @id @default(cuid())
+  debtRecordId    String
+  pharmacyId      String
+  amount          Float
+  paymentMethod   PaymentMethod
+  paymentDate     DateTime      @default(now())
+  reference       String?       // Check number, transaction ID, etc.
+  userId          String        // Who recorded the payment
+  notes           String?
+  
+  // Relations
+  debtRecord      DebtRecord    @relation(fields: [debtRecordId], references: [id])
+  pharmacy        Pharmacy      @relation(fields: [pharmacyId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
+  
+  @@index([debtRecordId])
+  @@index([pharmacyId])
+}
+
+// Order model for reorders
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique @default(cuid())
+  pharmacyId      String
+  orderDate       DateTime    @default(now())
+  expectedDate    DateTime?
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  userId          String      // Who created the order
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  pharmacy        Pharmacy    @relation(fields: [pharmacyId], references: [id])
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  
+  @@index([orderNumber])
+  @@index([pharmacyId])
+  @@index([status])
+}
+
+// Order items model
+model OrderItem {
+  id              String    @id @default(cuid())
+  orderId         String
+  medicationId    String
+  quantity        Int
+  unitCost        Float
+  totalCost       Float
+  
+  // Relations
+  order           Order      @relation(fields: [orderId], references: [id], onDelete: CASCADE)
+  medication      Medication @relation(fields: [medicationId], references: [id])
+  
+  @@index([orderId])
+  @@index([medicationId])
+}
+
+// Audit log model to track all changes
+model AuditLog {
+  id              String    @id @default(cuid())
+  userId          String
+  action          String    // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entity          String    // Which model was affected
+  entityId        String?   // ID of the affected record
+  changes         Json?     // JSON of what changed
+  ipAddress       String?
+  userAgent       String?
+  timestamp       DateTime  @default(now())
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([entity])
+  @@index([timestamp])
+}
