@@ -39,7 +39,7 @@ export default function InventoryTab() {
       }
     } catch (error) {
       console.error('Error fetching medications:', error);
-      // Use placeholder data if API fails
+      // Use placeholder data if API fails - all stock at 0 for initial setup
       setMedications([
         {
           id: '1',
@@ -65,6 +65,28 @@ export default function InventoryTab() {
         },
         {
           id: '3',
+          code: 'SEM10',
+          name: 'SEMAGLUTIDE/CYANOCOBALAMIN (2.5mg/1mL) - 10mg',
+          category: 'GLP-1 Agonist',
+          myceliumStock: 0,
+          angelStock: 0,
+          reorderLevel: 15,
+          unitCost: 70.0,
+          primaryPharmacy: 'Mycelium Pharmacy',
+        },
+        {
+          id: '4',
+          code: 'SEM125',
+          name: 'SEMAGLUTIDE/CYANOCOBALAMIN (2.5mg/1mL) - 12.5mg',
+          category: 'GLP-1 Agonist',
+          myceliumStock: 0,
+          angelStock: 0,
+          reorderLevel: 15,
+          unitCost: 90.0,
+          primaryPharmacy: 'Mycelium Pharmacy',
+        },
+        {
+          id: '5',
           code: 'TIRZ10',
           name: 'TIRZEPATIDE/CYANOCOBALAMIN (10MG/1 MG/ML) - 10mg',
           category: 'GLP-1/GIP Agonist',
@@ -72,6 +94,39 @@ export default function InventoryTab() {
           angelStock: 0,
           reorderLevel: 15,
           unitCost: 60.0,
+          primaryPharmacy: 'Angel Pharmacy',
+        },
+        {
+          id: '6',
+          code: 'TIRZ20',
+          name: 'TIRZEPATIDE/CYANOCOBALAMIN (10MG/2MG/ML) - 20mg',
+          category: 'GLP-1/GIP Agonist',
+          myceliumStock: 0,
+          angelStock: 0,
+          reorderLevel: 15,
+          unitCost: 80.0,
+          primaryPharmacy: 'Angel Pharmacy',
+        },
+        {
+          id: '7',
+          code: 'TIRZ30',
+          name: 'TIRZEPATIDE/CYANOCOBALAMIN (15MG/1 MG/ML) - 30mg',
+          category: 'GLP-1/GIP Agonist',
+          myceliumStock: 0,
+          angelStock: 0,
+          reorderLevel: 15,
+          unitCost: 90.0,
+          primaryPharmacy: 'Angel Pharmacy',
+        },
+        {
+          id: '8',
+          code: 'TIRZ60',
+          name: 'TIRZEPATIDE/CYANOCOBALAMIN (15MG/1 MG/ML) - 60mg',
+          category: 'GLP-1/GIP Agonist',
+          myceliumStock: 0,
+          angelStock: 0,
+          reorderLevel: 15,
+          unitCost: 130.0,
           primaryPharmacy: 'Angel Pharmacy',
         },
       ]);
