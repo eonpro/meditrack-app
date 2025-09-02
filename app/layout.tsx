@@ -12,6 +12,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "MediTrack - Medication Inventory Management",
   description: "Professional medication inventory management system",
+  icons: {
+    icon: "https://static.wixstatic.com/media/c49a9b_6c24f096e7994c1183c486f4853839b8~mv2.png",
+    shortcut: "https://static.wixstatic.com/media/c49a9b_6c24f096e7994c1183c486f4853839b8~mv2.png",
+    apple: "https://static.wixstatic.com/media/c49a9b_6c24f096e7994c1183c486f4853839b8~mv2.png",
+  },
 };
 
 export default function RootLayout({
