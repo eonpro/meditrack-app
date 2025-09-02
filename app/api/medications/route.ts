@@ -9,9 +9,19 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get user's pharmacy access
+    const userPharmacyAccess = session.user?.pharmacyAccess || [];
+    const hasMyceliumAccess = userPharmacyAccess.includes('PHARM01');
+    const hasAngelAccess = userPharmacyAccess.includes('PHARM02');
+
     const medications = await prisma.medication.findMany({
       include: {
         inventory: {
+          where: {
+            pharmacyId: {
+              in: userPharmacyAccess, // Only include inventory for accessible pharmacies
+            },
+          },
           include: {
             pharmacy: true,
           },
@@ -29,8 +39,9 @@ export async function GET() {
         code: med.code,
         name: med.name,
         category: med.category,
-        myceliumStock: myceliumInv?.currentStock || 0,
-        angelStock: angelInv?.currentStock || 0,
+        // Only show stock for pharmacies the user has access to
+        myceliumStock: hasMyceliumAccess ? (myceliumInv?.currentStock || 0) : 0,
+        angelStock: hasAngelAccess ? (angelInv?.currentStock || 0) : 0,
         reorderLevel: med.reorderLevel,
         unitCost: med.unitCost,
         primaryPharmacy: med.primaryPharmacy === 'PHARM01' ? 'Mycelium Pharmacy' : 'Angel Pharmacy',

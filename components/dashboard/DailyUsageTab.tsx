@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Calendar } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 interface Medication {
   id: string;

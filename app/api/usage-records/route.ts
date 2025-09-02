@@ -9,7 +9,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get user's pharmacy access
+    const userPharmacyAccess = session.user?.pharmacyAccess || [];
+
     const usageRecords = await prisma.usageRecord.findMany({
+      where: {
+        pharmacyId: {
+          in: userPharmacyAccess, // Only show usage records for accessible pharmacies
+        },
+      },
       include: {
         medication: true,
         pharmacy: true,
@@ -76,6 +84,12 @@ export async function POST(request: Request) {
 
     if (!pharmacy) {
       return NextResponse.json({ error: 'Pharmacy not found' }, { status: 404 });
+    }
+
+    // Check if user has access to this pharmacy
+    const userPharmacyAccess = session.user?.pharmacyAccess || [];
+    if (!userPharmacyAccess.includes(pharmacy.id)) {
+      return NextResponse.json({ error: 'You do not have access to this pharmacy' }, { status: 403 });
     }
 
     // Check inventory availability
