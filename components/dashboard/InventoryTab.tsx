@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, Edit2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 interface Medication {
   id: string;
@@ -16,15 +17,22 @@ interface Medication {
 }
 
 export default function InventoryTab() {
+  const { data: session } = useSession();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState('');
   const [selectedPharmacy, setSelectedPharmacy] = useState('Mycelium Pharmacy');
   const [quantity, setQuantity] = useState('');
   const [adding, setAdding] = useState(false);
+  const [editingMed, setEditingMed] = useState<Medication | null>(null);
+  const [editMyceliumStock, setEditMyceliumStock] = useState('');
+  const [editAngelStock, setEditAngelStock] = useState('');
+  
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   useEffect(() => {
     fetchMedications();
@@ -163,6 +171,40 @@ export default function InventoryTab() {
     }
   };
 
+  const handleEditClick = (med: Medication) => {
+    setEditingMed(med);
+    setEditMyceliumStock(med.myceliumStock.toString());
+    setEditAngelStock(med.angelStock.toString());
+    setShowEditModal(true);
+  };
+
+  const handleUpdateStock = async () => {
+    if (!editingMed) return;
+    
+    setAdding(true);
+    try {
+      const response = await fetch('/api/medications/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medicationId: editingMed.id,
+          myceliumStock: parseInt(editMyceliumStock) || 0,
+          angelStock: parseInt(editAngelStock) || 0,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchMedications();
+        setShowEditModal(false);
+        setEditingMed(null);
+      }
+    } catch (error) {
+      console.error('Error updating stock:', error);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const getStockStatus = (stock: number, reorderLevel: number) => {
     if (stock === 0) return { label: 'Out of Stock', className: 'bg-red-100 text-red-700' };
     if (stock <= reorderLevel) return { label: 'Low Stock', className: 'bg-yellow-100 text-yellow-700' };
@@ -293,11 +335,22 @@ export default function InventoryTab() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {totalStock <= med.reorderLevel && (
-                        <button className="text-[#0e88e9] hover:text-[#0c70c0] text-sm font-medium">
-                          Reorder
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleEditClick(med)}
+                            className="text-gray-600 hover:text-gray-900 p-1"
+                            title="Edit Stock"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {totalStock <= med.reorderLevel && (
+                          <button className="text-[#0e88e9] hover:text-[#0c70c0] text-sm font-medium">
+                            Reorder
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -380,6 +433,89 @@ export default function InventoryTab() {
                   className="flex-1 px-4 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {adding ? 'Adding...' : 'Add Stock'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Stock Modal (Admin Only) */}
+      {showEditModal && editingMed && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 transition-all">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border-2 border-gray-100">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Edit Stock Levels</h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingMed(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Medication
+                </label>
+                <div className="px-4 py-2 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium">{editingMed.name}</p>
+                  <p className="text-xs text-gray-500">{editingMed.code}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mycelium Pharmacy Stock
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={editMyceliumStock}
+                  onChange={(e) => setEditMyceliumStock(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Angel Pharmacy Stock
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={editAngelStock}
+                  onChange={(e) => setEditAngelStock(e.target.value)}
+                />
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Admin Action:</strong> This will directly set the stock levels. Changes are logged for audit purposes.
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingMed(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateStock}
+                  disabled={adding}
+                  className="flex-1 px-4 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {adding ? 'Updating...' : 'Update Stock'}
                 </button>
               </div>
             </div>
