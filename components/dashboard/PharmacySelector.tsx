@@ -27,6 +27,21 @@ export default function PharmacySelector() {
     }
   }, [session, setSelectedPharmacy]);
 
+  // If user only has access to one pharmacy, don't show dropdown
+  if (session?.user?.pharmacyAccess?.length === 1) {
+    const pharmacyName = session.user.pharmacyAccess[0] === 'PHARM01' 
+      ? 'Mycelium Pharmacy' 
+      : 'Angel Pharmacy';
+    
+    return (
+      <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
+        <span className="text-sm font-medium">Viewing:</span>
+        <span className="text-sm font-semibold">{pharmacyName}</span>
+      </div>
+    );
+  }
+
+  // Only show dropdown for users with access to multiple pharmacies (super admins)
   return (
     <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
       <label className="text-sm font-medium">Viewing:</label>
