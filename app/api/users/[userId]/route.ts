@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     const session = await auth();
     if (!session) {
@@ -22,7 +23,7 @@ export async function PUT(
 
     // Don't allow changing super admin role
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     if (!targetUser) {
@@ -35,7 +36,7 @@ export async function PUT(
 
     // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: {
         name,
         role,
@@ -58,7 +59,7 @@ export async function PUT(
         userId: session.user.id,
         action: 'UPDATE',
         entity: 'User',
-        entityId: params.userId,
+        entityId: userId,
         changes: {
           action: 'update_user',
           name,
@@ -78,8 +79,9 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     const session = await auth();
     if (!session) {
@@ -93,7 +95,7 @@ export async function DELETE(
 
     // Don't allow deleting super admin
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     if (!targetUser) {
@@ -111,7 +113,7 @@ export async function DELETE(
 
     // Soft delete - just mark as inactive
     await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: {
         isActive: false,
       },
@@ -123,7 +125,7 @@ export async function DELETE(
         userId: session.user.id,
         action: 'DELETE',
         entity: 'User',
-        entityId: params.userId,
+        entityId: userId,
         changes: {
           action: 'delete_user',
           email: targetUser.email,

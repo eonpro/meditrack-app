@@ -5,8 +5,9 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     const session = await auth();
     if (!session) {
@@ -26,7 +27,7 @@ export async function POST(
     }
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     if (!targetUser) {
@@ -38,7 +39,7 @@ export async function POST(
 
     // Update password
     await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: {
         password: hashedPassword,
       },
@@ -50,7 +51,7 @@ export async function POST(
         userId: session.user.id,
         action: 'UPDATE',
         entity: 'User',
-        entityId: params.userId,
+        entityId: userId,
         changes: {
           action: 'reset_password',
           targetEmail: targetUser.email,
