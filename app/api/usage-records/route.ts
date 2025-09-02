@@ -101,7 +101,9 @@ export async function POST(request: Request) {
           quantity,
           company,
           date: new Date(date),
-          recordedBy: session.user.id,
+          userId: session.user.id,
+          unitCost: medication.unitCost,
+          totalCost: quantity * medication.unitCost,
         },
       });
 
