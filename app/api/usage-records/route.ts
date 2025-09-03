@@ -52,6 +52,7 @@ export async function GET(request: Request) {
         hour12: false 
       }),
       medication: record.medication.name,
+      medicationId: record.medicationId, // Include medicationId for edit functionality
       quantity: record.quantity,
       company: record.company,
       unitCost: record.unitCost,

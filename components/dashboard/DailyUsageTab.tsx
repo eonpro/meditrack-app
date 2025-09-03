@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Calendar } from 'lucide-react';
+import { ChevronDown, Calendar, Edit, Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { usePharmacy } from '@/contexts/PharmacyContext';
 
@@ -20,6 +20,7 @@ interface UsageRecord {
   date: string;
   time: string;
   medication: string;
+  medicationId: string;
   quantity: number;
   company: string;
   unitCost: number;
@@ -29,6 +30,7 @@ interface UsageRecord {
 }
 
 export default function DailyUsageTab() {
+  const { data: session } = useSession();
   const { selectedPharmacy } = usePharmacy();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [usageRecords, setUsageRecords] = useState<UsageRecord[]>([]);
@@ -41,9 +43,20 @@ export default function DailyUsageTab() {
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [usagePharmacy, setUsagePharmacy] = useState(''); // Which pharmacy to deduct from
   const [loading, setLoading] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<UsageRecord | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editDate, setEditDate] = useState('');
+  const [editMedication, setEditMedication] = useState('');
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editCompany, setEditCompany] = useState('');
+  const [editPharmacy, setEditPharmacy] = useState('');
+  const [showEditMedicationDropdown, setShowEditMedicationDropdown] = useState(false);
+  const [showEditCompanyDropdown, setShowEditCompanyDropdown] = useState(false);
   
   const medicationDropdownRef = useRef<HTMLDivElement>(null);
   const companyDropdownRef = useRef<HTMLDivElement>(null);
+  const editMedicationDropdownRef = useRef<HTMLDivElement>(null);
+  const editCompanyDropdownRef = useRef<HTMLDivElement>(null);
 
   const companies = [
     'EONMeds',
@@ -72,6 +85,12 @@ export default function DailyUsageTab() {
       }
       if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target as Node)) {
         setShowCompanyDropdown(false);
+      }
+      if (editMedicationDropdownRef.current && !editMedicationDropdownRef.current.contains(event.target as Node)) {
+        setShowEditMedicationDropdown(false);
+      }
+      if (editCompanyDropdownRef.current && !editCompanyDropdownRef.current.contains(event.target as Node)) {
+        setShowEditCompanyDropdown(false);
       }
     }
 
@@ -179,6 +198,78 @@ export default function DailyUsageTab() {
   };
 
   const getTotalStock = (med: Medication) => med.myceliumStock + med.angelStock;
+
+  const handleEditClick = (record: UsageRecord) => {
+    setEditingRecord(record);
+    setEditDate(record.date);
+    setEditMedication(record.medicationId);
+    setEditQuantity(record.quantity.toString());
+    setEditCompany(record.company);
+    setEditPharmacy(record.pharmacy);
+    setShowEditModal(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingRecord) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/usage-records/${editingRecord.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medicationId: editMedication,
+          quantity: parseInt(editQuantity),
+          company: editCompany,
+          date: editDate,
+          pharmacy: editPharmacy,
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditModal(false);
+        setEditingRecord(null);
+        await fetchMedications();
+        await fetchUsageRecords();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Error updating usage record');
+      }
+    } catch (error) {
+      console.error('Error updating usage:', error);
+      alert('Error updating usage record');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (recordId: string) => {
+    if (!confirm('Are you sure you want to delete this usage record? The inventory will be restored.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/usage-records/${recordId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await fetchMedications();
+        await fetchUsageRecords();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Error deleting usage record');
+      }
+    } catch (error) {
+      console.error('Error deleting usage:', error);
+      alert('Error deleting usage record');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canEditDelete = session?.user?.role === 'ADMIN' || session?.user?.role === 'PHARMACY_MANAGER';
 
   return (
     <div className="space-y-6">
@@ -360,12 +451,17 @@ export default function DailyUsageTab() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Pharmacy
                 </th>
+                {canEditDelete && (
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {usageRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={canEditDelete ? 10 : 9} className="px-6 py-8 text-center text-gray-500">
                     No usage records yet. Record your first medication usage above.
                   </td>
                 </tr>
@@ -405,6 +501,26 @@ export default function DailyUsageTab() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {record.pharmacy}
                     </td>
+                    {canEditDelete && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(record)}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -412,6 +528,149 @@ export default function DailyUsageTab() {
           </table>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingRecord && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Edit Usage Record</h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingRecord(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Medication */}
+              <div className="relative" ref={editMedicationDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Medication</label>
+                <button
+                  onClick={() => setShowEditMedicationDropdown(!showEditMedicationDropdown)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none bg-white text-left flex justify-between items-center"
+                >
+                  <span className="text-sm pr-2">
+                    {medications.find(m => m.id === editMedication)?.name || 'Select Medication'}
+                  </span>
+                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                </button>
+                
+                {showEditMedicationDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {medications.map((med) => (
+                      <button
+                        key={med.id}
+                        onClick={() => {
+                          setEditMedication(med.id);
+                          setShowEditMedicationDropdown(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 ${
+                          editMedication === med.id ? 'bg-orange-100' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-center gap-4">
+                          <span className="text-sm flex-1">{med.name}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Company */}
+              <div className="relative" ref={editCompanyDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                <button
+                  onClick={() => setShowEditCompanyDropdown(!showEditCompanyDropdown)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none bg-white text-left flex justify-between items-center"
+                >
+                  <span>{editCompany}</span>
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </button>
+                
+                {showEditCompanyDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {companies.map((company) => (
+                      <button
+                        key={company}
+                        onClick={() => {
+                          setEditCompany(company);
+                          setShowEditCompanyDropdown(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 ${
+                          editCompany === company ? 'bg-blue-100' : ''
+                        }`}
+                      >
+                        {company}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pharmacy */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pharmacy</label>
+                <select
+                  value={editPharmacy}
+                  onChange={(e) => setEditPharmacy(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="Mycelium Pharmacy">Mycelium Pharmacy</option>
+                  <option value="Angel Pharmacy">Angel Pharmacy</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingRecord(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={loading || !editMedication || !editQuantity}
+                className="px-4 py-2 bg-[#0e88e9] text-white rounded-lg hover:bg-[#0c70c0] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
